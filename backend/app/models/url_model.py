@@ -5,21 +5,21 @@ from app.utils.base62 import generate_short_code
 class URLCreate(BaseModel):
     original_url: HttpUrl
 
-def create_url(original_url):
+def create_url(original_url, user_id):
     connection = get_connection()
     cursor = connection.cursor()
     try:
         while True:
             short_code = generate_short_code()
             query = """
-                INSERT INTO urls (short_code, original_url)
-                VALUES (%s, %s)
-                RETURNING id, short_code, original_url, click_count;
+                INSERT INTO urls (short_code, original_url, user_id)
+                VALUES (%s, %s, %s)
+                RETURNING id, short_code, original_url, click_count, user_id;
             """
             try:
                 cursor.execute(
                     query,
-                    (short_code, str(original_url))
+                    (short_code, str(original_url), user_id)
                 )
                 result = cursor.fetchone()
                 connection.commit()
@@ -49,16 +49,16 @@ def get_test_url():
 
     return result
 
-def get_url_by_short_code(short_code):
+def get_url_by_short_code(short_code, user_id):
     connection = get_connection()
     cursor = connection.cursor()
     try:
         query = """
             SELECT id, short_code, original_url, click_count
             FROM urls
-            WHERE short_code = %s;
+            WHERE short_code = %s AND user_id = %s;
         """
-        cursor.execute(query, (short_code,))
+        cursor.execute(query, (short_code, user_id))
         result = cursor.fetchone()
         return result
     finally:
@@ -80,15 +80,15 @@ def increment_click_count(short_code):
         cursor.close()
         connection.close()
 
-def delete_url(short_code):
+def delete_url(short_code, user_id):
     connection = get_connection()
     cursor = connection.cursor()
     try:
         query = """
             DELETE FROM urls
-            WHERE short_code = %s
+            WHERE short_code = %s AND user_id = %s;
         """
-        cursor.execute(query, (short_code,))
+        cursor.execute(query, (short_code, user_id))
         deleted_rows = cursor.rowcount
         connection.commit()
         return deleted_rows
@@ -96,17 +96,17 @@ def delete_url(short_code):
         cursor.close()
         connection.close()
 
-def update_url(short_code, original_url):
+def update_url(short_code, original_url, user_id):
     connection = get_connection()
     cursor = connection.cursor()
     try:
         query = """
             UPDATE urls
             SET original_url = %s
-            WHERE short_code = %s;
+            WHERE short_code = %s AND user_id = %s;
         """
         cursor.execute(
-            query,(str(original_url), short_code))
+            query,(str(original_url), short_code, user_id))
         updated_rows = cursor.rowcount
         connection.commit()
         return updated_rows
