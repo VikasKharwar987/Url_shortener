@@ -2,3 +2,5 @@ fastapi
 uvicorn
 psycopg[binary]
 redis
+passlib[bcrypt]
+PyJWT

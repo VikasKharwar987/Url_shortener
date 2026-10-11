@@ -1,8 +1,8 @@
 from app.models.url_model import create_url, get_test_url, get_url_by_short_code, increment_click_count, delete_url, update_url
 from app.utils.redis_client import redis_client
 
-def create_short_url(url):
-    result = create_url(url.original_url)
+def create_short_url(url, user_id):
+    result = create_url(url.original_url, user_id)
     if result is None:
         return {"message": "No URL found"}
     return {
@@ -28,8 +28,8 @@ def find_short_url(short_code):
     increment_click_count(short_code)
     return original_url
 
-def get_url_details(short_code):
-    result = get_url_by_short_code(short_code)
+def get_url_details(short_code, user_id):
+    result = get_url_by_short_code(short_code, user_id)
     if result is None:
         return None
     return {
@@ -39,8 +39,8 @@ def get_url_details(short_code):
         "click_count": result[3]
     }
 
-def remove_url(short_code):
-    deleted_rows = delete_url(short_code)
+def remove_url(short_code, user_id):
+    deleted_rows = delete_url(short_code, user_id)
     if deleted_rows == 0:
         return None
     cache_key = f"url:{short_code}"
@@ -50,8 +50,8 @@ def remove_url(short_code):
         "short_code": short_code
     }
 
-def edit_url(short_code, original_url):
-    updated_rows = update_url(short_code, original_url)
+def edit_url(short_code, original_url, user_id):
+    updated_rows = update_url(short_code, original_url, user_id)
     if updated_rows == 0:
         return None
     cache_key = f"url:{short_code}"
